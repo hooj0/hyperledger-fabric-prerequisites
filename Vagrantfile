@@ -51,15 +51,15 @@ Vagrant.configure('2') do |config|
   #config.vm.synced_folder "G:/docker-data", "/mnt/data/docker", owner: "root", group: "root"
   config.vm.synced_folder "D:/.m2/repository", "/root/.m2/repository"
   config.vm.synced_folder "D:/workspace_fabric", "/opt/fabric-dev"
-  config.vm.synced_folder "D:/workspace_blockchain_masget", "/opt/fabric-prod"
+  config.vm.synced_folder "D:/workspace_blockchain_chaincode", "/opt/fabric-prod"
   
   config.vm.synced_folder "D:/workspace_fabric/fabric-sdk-java/src/test/fixture/sdkintegration", "/opt/gopath/src/github.com/hyperledger/fabric/sdkintegration"
   #config.vm.synced_folder "D:/workspace_fabric/fabric-sdk-integrate/src/test/fixture/integration", "/opt/gopath/src/github.com/hyperledger/fabric/integration"
   #config.vm.synced_folder "D:/workspace_fabric/fabric-sdk-commons/src/test/fixture/integration", "/opt/gopath/src/github.com/hyperledger/fabric/integration"
   #config.vm.synced_folder "D:/workspace_fabric/fabric-sdk-spring/spring-data-fabric-chaincode/src/test/fixture/integration","/opt/gopath/src/github.com/hyperledger/fabric/integration"
   #config.vm.synced_folder "D:/workspace_fabric/fabric-sdk-spring/spring-data-fabric-chaincode-examples/src/main/resources/fabric-integration","/opt/gopath/src/github.com/hyperledger/fabric/integration"  
-  #config.vm.synced_folder "D:/workspace_blockchain_masget/blockchain-fabric-chaincode/chaincode-deploy-service/src/fabric/resources","/opt/gopath/src/github.com/hyperledger/fabric/integration"
-  #config.vm.synced_folder "D:/workspace_blockchain_masget/blockchain-fabric-network/dev/simple","/opt/gopath/src/github.com/hyperledger/fabric/integration"
+  #config.vm.synced_folder "D:/workspace_blockchain_chaincode/blockchain-fabric-chaincode/chaincode-deploy-service/src/fabric/resources","/opt/gopath/src/github.com/hyperledger/fabric/integration"
+  #config.vm.synced_folder "D:/workspace_blockchain_mchaincode/blockchain-fabric-network/dev/simple","/opt/gopath/src/github.com/hyperledger/fabric/integration"
   
   
   config.vm.synced_folder ENV.fetch('LOCALDEVDIR', "../.."), "#{LOCALDEV}"
