@@ -23,7 +23,7 @@ export MARCH=$(uname -m)
 # variables
 #----------------------------------------------------------------------
 WORKDIR="/tmp/fabric"
-HYPERLEDGER_DIR="$GOPATH/src/github.com/hyperledger"
+HYPERLEDGER_DIR="/opt/gopath/src/github.com/hyperledger"
 FABRIC_BINARY="release/$ARCH/bin"
 
 FABRIC_VERSION=v1.1.0
@@ -35,6 +35,16 @@ GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
 GO_ENV_FILE=".env"
 GO_PROFILE="/etc/profile.d/goroot.sh"
 
+echo "WORKDIR=${WORKDIR}"
+echo "HYPERLEDGER_DIR=${HYPERLEDGER_DIR}"
+echo "FABRIC_BINARY=${FABRIC_BINARY}"
+
+echo "FABRIC_VERSION=${FABRIC_VERSION}"
+echo "FABRIC_BINARY_VERSION=${FABRIC_BINARY_VERSION}"
+echo "GO_VERSION=${GO_VER}"
+
+echo "GO_ENV_FILE=${GO_ENV_FILE}"
+echo "GO_PROFILE=${GO_PROFILE}"
 
 # function
 #----------------------------------------------------------------------
