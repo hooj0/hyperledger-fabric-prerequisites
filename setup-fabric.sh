@@ -1,4 +1,12 @@
 #!/bin/bash
+# --------------------------------------------------------------------
+# author:   hoojo
+# email:    hoojo_@126.com
+# github:   https://github.com/hooj0
+# create date: 2018-08-25
+# copyright by hoojo@2018
+# --------------------------------------------------------------------
+
 #@changelog Hyperledger fabric prerequisites environment software and tools setup script
 
 set -e
