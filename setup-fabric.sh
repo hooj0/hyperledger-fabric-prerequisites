@@ -246,7 +246,10 @@ else
 	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric-ca"
 
 	[ ! -z $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
+
+	log yellow "===> switch workdir $WORKDIR"
 	cd $HYPERLEDGER_DIR
+	echo "current pwd: $PWD" 
 
 	log yellow "===> clone fabric-ca code to: $PWD/fabric-ca"
 	git clone https://github.com/hyperledger/fabric-ca.git
