@@ -29,7 +29,7 @@ FABRIC_BINARY="release/$ARCH/bin"
 FABRIC_VERSION=v1.1.0
 FABRIC_BINARY_VERSION=`echo $FABRIC_VERSION | sed 's/\v//g'` 
 
-GO_VER=1.9
+GO_VER=1.11
 GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
 
 GO_ENV_FILE=".env"
@@ -50,7 +50,6 @@ log yellow "===> write env to $GO_ENV_FILE"
 # use env
 source $GO_ENV_FILE
 }
-
 
 function settingGoProfile() {
 log yellow "===> setting go env to ${GO_PROFILE}"
@@ -115,7 +114,7 @@ log done "update system"
 #----------------------------------------------------------------------
 log blue "-------------------------export env--------------------------"
 
-if [ -z ${GOPATH} ]; then	
+if [ -z ${GOPATH} ]; then
 	settingGoEnv
 else
 	log yellow "===> already existing env $GO_ENV_FILE"	
