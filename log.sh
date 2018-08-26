@@ -1,5 +1,13 @@
 #!/bin/sh
-#@changelog tools Log shell script
+# --------------------------------------------------------------------
+# author:   hoojo
+# email:    hoojo_@126.com
+# github:   https://github.com/hooj0
+# create date: 2018-08-25
+# copyright by hoojo @ 2018
+# --------------------------------------------------------------------
+
+# @changelog Log shell script tools
 
 function log() {
 	# 字颜色：30—–37
