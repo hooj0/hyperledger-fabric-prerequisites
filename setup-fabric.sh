@@ -399,7 +399,7 @@ if [ ! -d "$FABRIC_BINARY" ]; then
 	cd $FABRIC_BINARY
 	
 	log yellow "===> download binary tools (ca-client): exec bootstrap.sh 1.2.0 -b"
-	#source bootstrap.sh ${FABRIC_BINARY_VERSION} -b
+	#source bootstrap-1.2.sh ${FABRIC_BINARY_VERSION} -b
 	
 	log yellow "===> Downloading platform specific fabric binaries"
 	#curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz | tar xz
@@ -416,7 +416,7 @@ log done "download binary fabric tools"
 log blue "-----------------pull fabric docker image--------------------"
 
 log yellow "===> pull docker hyperledger/fabric images"
-#source bootstrap.sh ${FABRIC_BINARY_VERSION} -d
+#source bootstrap-1.2.sh ${FABRIC_BINARY_VERSION} -d
 
 log yellow "===> preview hyperledger/fabric images"
 #docker images hyperledger/fabric-*
