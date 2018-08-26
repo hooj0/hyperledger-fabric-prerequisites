@@ -105,7 +105,7 @@ if [ `command -v apt-get` ]; then
 	apt-get install -y build-essential make unzip g++ libtool
 else
 	log red "===> not found apt-get command, check your system style is ubuntu?"	
-	#exit 1
+	exit 1
 fi
 
 log done "update system"
@@ -224,11 +224,13 @@ else
 	cd $HYPERLEDGER_DIR
 
 	log yellow "===> clone fabric code to: $PWD/fabric"
-	#git clone https://github.com/hyperledger/fabric.git
+	git clone https://github.com/hyperledger/fabric.git
 
-	#git tag
+	log yellow "===> fabric code tag"
+	git tag
+	
 	log yellow "===> checkout fabric code version to: $FABRIC_VERSION"
-	#git checkout $FABRIC_VERSION
+	git checkout $FABRIC_VERSION
 fi
 
 log done "download fabric code"
@@ -246,12 +248,14 @@ else
 	[ ! -z $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
 	cd $HYPERLEDGER_DIR
 
-	log yellow "===> clone fabric code to: $PWD/fabric-ca"
-	#git clone https://github.com/hyperledger/fabric-ca.git
+	log yellow "===> clone fabric-ca code to: $PWD/fabric-ca"
+	git clone https://github.com/hyperledger/fabric-ca.git
 
-	#git tag
+	log yellow "===> fabric-ca code tag"
+	git tag
+	
 	log yellow "===> checkout fabric-ca code version to: $FABRIC_VERSION"
-	#git checkout $FABRIC_VERSION
+	git checkout $FABRIC_VERSION
 fi
 
 log done "download fabric-ca code"
@@ -269,12 +273,14 @@ else
 	[ ! -z $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
 	cd $HYPERLEDGER_DIR
 
-	log yellow "===> clone fabric code to: $PWD/fabric-samples"
-	#git clone https://github.com/hyperledger/fabric-samples.git
+	log yellow "===> clone fabric samples code to: $PWD/fabric-samples"
+	git clone https://github.com/hyperledger/fabric-samples.git
 
-	#git tag
+	log yellow "===> fabric samples code tag"
+	git tag
+
 	log yellow "===> checkout fabric-samples code version to: $FABRIC_VERSION"
-	#git checkout $FABRIC_VERSION
+	git checkout $FABRIC_VERSION
 fi
 
 log done "download fabric-samples code"
@@ -337,7 +343,7 @@ fi
 
 # Test docker
 log yellow "===> test docker"
-#docker run --rm busybox echo All good
+docker run --rm busybox echo 'docker fabric image is good'
 
 log done "install docker compose"
 
@@ -363,14 +369,14 @@ if [ -d "$FABRIC_BINARY" ]; then
 	if (( line <= 0 )); then
 		log yellow "===> ${FABRIC_BINARY} dir is empty, make binary file"
 
-		#make clean gotools
-		#make release
+		make clean gotools
+		make release
 	fi	
 else
 	log yellow "===> not found fabric tools binary release dir: ${FABRIC_BINARY}"
 	
-	#make clean gotools
-	#make release
+	make clean gotools
+	make release
 fi
 
 
@@ -380,7 +386,7 @@ if [ "`command -v cryptogen`" ]; then
 else
 	log yellow "===> copy ${FABRIC_BINARY}/ -->> usr/bin dir"
 
-	#cp -rv $FABRIC_BINARY /usr/bin/
+	cp -rv $FABRIC_BINARY /usr/bin/
 fi	
 
 log done "make binary fabric tools"
@@ -399,7 +405,7 @@ if [ ! -d "$FABRIC_BINARY" ]; then
 	cd $FABRIC_BINARY
 	
 	log yellow "===> download binary tools (ca-client): exec bootstrap.sh 1.2.0 -b"
-	#source bootstrap-1.2.sh ${FABRIC_BINARY_VERSION} -b
+	source bootstrap-1.2.sh ${FABRIC_BINARY_VERSION} -b
 	
 	log yellow "===> Downloading platform specific fabric binaries"
 	#curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz | tar xz
@@ -416,9 +422,9 @@ log done "download binary fabric tools"
 log blue "-----------------pull fabric docker image--------------------"
 
 log yellow "===> pull docker hyperledger/fabric images"
-#source bootstrap-1.2.sh ${FABRIC_BINARY_VERSION} -d
+source bootstrap-1.2.sh ${FABRIC_BINARY_VERSION} -d
 
 log yellow "===> preview hyperledger/fabric images"
-#docker images hyperledger/fabric-*
+docker images hyperledger/fabric-*
 
 log done "pull fabric docker image"
