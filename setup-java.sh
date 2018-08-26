@@ -60,7 +60,7 @@ log done "install maven"
 
 # Install gradle
 #----------------------------------------------------------------------
-log blue "-----------------------install gradle--------------------------"
+log blue "-----------------------install gradle------------------------"
 if [ `command -v gradle` ]
 	log yellow "===> already existing gradle"
 	where gradle
