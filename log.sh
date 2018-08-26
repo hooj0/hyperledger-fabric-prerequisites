@@ -1,5 +1,5 @@
 #!/bin/sh
-#@changelog Hyperledger fabric prerequisites environment software and tools Log shell script
+#@changelog tools Log shell script
 
 function log() {
 	# 字颜色：30—–37
