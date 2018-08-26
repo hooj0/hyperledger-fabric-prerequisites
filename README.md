@@ -9,6 +9,20 @@ $ sudo setup-fabric.sh
 
 start install fabric prerequisites environment software and tools.
 
+### software and tools list
++ apt-get
++ curl
++ golang 1.9+
++ git
++ fabric code
++ fabric-ca code
++ fabric-sample code
++ docker
++ docker-compose
++ make & download fabric binary file
++ pull fabric docker image
+
+
 ## install java dev env
 execute the script below:
 ```sh
