@@ -14,41 +14,41 @@ export MARCH=$(uname -m)
 
 # variables
 #----------------------------------------------------------------------
-workdir="/tmp/fabric"
-hyperledger_dir="$GOPATH/src/github.com/hyperledger"
-fabric_version=v1.1.0
-fabric_binary_version=`echo $fabric_version | sed 's/\v//g'` 
+WORKDIR="/tmp/fabric"
+HYPERLEDGER_DIR="$GOPATH/src/github.com/hyperledger"
+FABRIC_BINARY="release/$ARCH/bin"
+
+FABRIC_VERSION=v1.1.0
+FABRIC_BINARY_VERSION=`echo $FABRIC_VERSION | sed 's/\v//g'` 
 
 GO_VER=1.9
 GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
 
-go_env_file=".env"
-go_profile="/etc/profile.d/goroot.sh"
-
-fabric_binary="release/$ARCH/bin"
+GO_ENV_FILE=".env"
+GO_PROFILE="/etc/profile.d/goroot.sh"
 
 
 # function
 #----------------------------------------------------------------------
 function settingGoEnv() {
-log yellow "===> write env to $go_env_file"
+log yellow "===> write env to $GO_ENV_FILE"
 
-#cat > bbcc << EOF
+#cat > $GO_ENV_FILE << EOF
 #export GOPATH="/opt/gopath"
 #export GOROOT="/opt/go"
 #export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 #EOF
 
 # use env
-source $go_env_file
+source $GO_ENV_FILE
 }
 
 
 function settingGoProfile() {
-log yellow "===> setting go env to ${go_profile}"
+log yellow "===> setting go env to ${GO_PROFILE}"
 
-#cat <<EOF >${go_profile}
-#cat > aa1aa << EOF
+#cat <<EOF >${GO_PROFILE}
+#cat > ${GO_PROFILE} << EOF
 #export GOROOT=$GOROOT
 #export GOPATH=$GOPATH
 #export PATH=\$PATH:$GOROOT/bin:$GOPATH/bin
@@ -110,7 +110,7 @@ log blue "-------------------------export env--------------------------"
 if [ -z ${GOPATH} ]; then	
 	settingGoEnv
 else
-	log yellow "===> already existing env $go_env_file"	
+	log yellow "===> already existing env $GO_ENV_FILE"	
 fi
 
 log yellow "===> env | grep go"
@@ -126,17 +126,17 @@ log done "export env"
 #----------------------------------------------------------------------
 log blue "-----------------------switch workdir------------------------"
 
-if [ -d $workdir ]; then
-	log yellow "===> already existing workdir $workdir"
+if [ -d $WORKDIR ]; then
+	log yellow "===> already existing workdir $WORKDIR"
 else
-	log yellow "===> create workdir $workdir"
-	mkdir -pv $workdir
+	log yellow "===> create workdir $WORKDIR"
+	mkdir -pv $WORKDIR
 fi
 
-log yellow "===> switch workdir $workdir"
+log yellow "===> switch workdir $WORKDIR"
 echo "current pwd: $PWD" 
 
-cd $workdir
+cd $WORKDIR
 log white "latest pwd: $PWD"
 
 log done "switch workdir"
@@ -207,20 +207,20 @@ log done "install git"
 #----------------------------------------------------------------------
 log blue "---------------------download fabric code--------------------"
 
-if  [ -z "$hyperledger_dir/fabric" ]; then
-	log yellow "===> already existing code: $hyperledger_dir/fabric"
+if  [ -z "$HYPERLEDGER_DIR/fabric" ]; then
+	log yellow "===> already existing code: $HYPERLEDGER_DIR/fabric"
 else
-	log yellow "===> create fabric code dir: $hyperledger_dir/fabric"
+	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric"
 
-	[ ! -z $hyperledger_dir ] && mkdir -pv $hyperledger_dir
-	cd $hyperledger_dir
+	[ ! -z $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
+	cd $HYPERLEDGER_DIR
 
 	log yellow "===> clone fabric code to: $PWD/fabric"
 	#git clone https://github.com/hyperledger/fabric.git
 
 	#git tag
-	log yellow "===> checkout fabric code version to: $fabric_version"
-	#git checkout $fabric_version
+	log yellow "===> checkout fabric code version to: $FABRIC_VERSION"
+	#git checkout $FABRIC_VERSION
 fi
 
 log done "download fabric code"
@@ -230,20 +230,20 @@ log done "download fabric code"
 #----------------------------------------------------------------------
 log blue "-------------------download fabric ca code-------------------"
 
-if  [ -z "$hyperledger_dir/fabric-ca" ]; then
-	log yellow "===> already existing code: $hyperledger_dir/fabric-ca"
+if  [ -z "$HYPERLEDGER_DIR/fabric-ca" ]; then
+	log yellow "===> already existing code: $HYPERLEDGER_DIR/fabric-ca"
 else
-	log yellow "===> create fabric code dir: $hyperledger_dir/fabric-ca"
+	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric-ca"
 
-	[ ! -z $hyperledger_dir ] && mkdir -pv $hyperledger_dir
-	cd $hyperledger_dir
+	[ ! -z $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
+	cd $HYPERLEDGER_DIR
 
 	log yellow "===> clone fabric code to: $PWD/fabric-ca"
 	#git clone https://github.com/hyperledger/fabric-ca.git
 
 	#git tag
-	log yellow "===> checkout fabric-ca code version to: $fabric_version"
-	#git checkout $fabric_version
+	log yellow "===> checkout fabric-ca code version to: $FABRIC_VERSION"
+	#git checkout $FABRIC_VERSION
 fi
 
 log done "download fabric-ca code"
@@ -253,20 +253,20 @@ log done "download fabric-ca code"
 #----------------------------------------------------------------------
 log blue "-----------------download fabric samples code----------------"
 
-if  [ -z "$hyperledger_dir/fabric-samples" ]; then
-	log yellow "===> already existing code: $hyperledger_dir/fabric-samples"
+if  [ -z "$HYPERLEDGER_DIR/fabric-samples" ]; then
+	log yellow "===> already existing code: $HYPERLEDGER_DIR/fabric-samples"
 else
-	log yellow "===> create fabric code dir: $hyperledger_dir/fabric-samples"
+	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric-samples"
 
-	[ ! -z $hyperledger_dir ] && mkdir -pv $hyperledger_dir
-	cd $hyperledger_dir
+	[ ! -z $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
+	cd $HYPERLEDGER_DIR
 
 	log yellow "===> clone fabric code to: $PWD/fabric-samples"
 	#git clone https://github.com/hyperledger/fabric-samples.git
 
 	#git tag
-	log yellow "===> checkout fabric-samples code version to: $fabric_version"
-	#git checkout $fabric_version
+	log yellow "===> checkout fabric-samples code version to: $FABRIC_VERSION"
+	#git checkout $FABRIC_VERSION
 fi
 
 log done "download fabric-samples code"
@@ -343,23 +343,23 @@ log blue "-----------------make binary fabric tools--------------------"
 #sudo chown -R ubuntu:ubuntu /var/hyperledger
 
 log yellow "===> current workdir to $PWD"
-log yellow "===> switch workdir to $hyperledger_dir/fabric"
+log yellow "===> switch workdir to $HYPERLEDGER_DIR/fabric"
 
 [ -z fabric ] && cd fabric
 
-if [ -d "$fabric_binary" ]; then
-	log yellow "===> already existing release dir: $fabric_binary"
-	ls -al ${fabric_binary}
+if [ -d "$FABRIC_BINARY" ]; then
+	log yellow "===> already existing release dir: $FABRIC_BINARY"
+	ls -al ${FABRIC_BINARY}
 
-	line=`ls -al ${fabric_binary} | wc -l`
+	line=`ls -al ${FABRIC_BINARY} | wc -l`
 	if (( line <= 0 )); then
-		log yellow "===> ${fabric_binary} dir is empty, make binary file"
+		log yellow "===> ${FABRIC_BINARY} dir is empty, make binary file"
 
 		#make clean gotools
 		#make release
 	fi	
 else
-	log yellow "===> not found fabric tools binary release dir: ${fabric_binary}"
+	log yellow "===> not found fabric tools binary release dir: ${FABRIC_BINARY}"
 	
 	#make clean gotools
 	#make release
@@ -370,9 +370,9 @@ if [ "`command -v cryptogen`" ]; then
 	log yellow "===> already existing cryptogen"
 	where cryptogen
 else
-	log yellow "===> copy ${fabric_binary}/ -->> usr/bin dir"
+	log yellow "===> copy ${FABRIC_BINARY}/ -->> usr/bin dir"
 
-	#cp -rv $fabric_binary /usr/bin/
+	#cp -rv $FABRIC_BINARY /usr/bin/
 fi	
 
 log done "make binary fabric tools"
@@ -382,16 +382,22 @@ log done "make binary fabric tools"
 #----------------------------------------------------------------------
 log blue "--------------download binary fabric tools-------------------"
 
-if [ ! -d "$fabric_binary" ]; then
+if [ ! -d "$FABRIC_BINARY" ]; then
 	
-	log yellow "===> create binary dir $fabric_binary"
-	mkdir -pv $fabric_binary
+	log yellow "===> create binary dir $FABRIC_BINARY"
+	mkdir -pv $FABRIC_BINARY
 
-	log yellow "===> switch workdir to $fabric_binary"
-	cd $fabric_binary
+	log yellow "===> switch workdir to $FABRIC_BINARY"
+	cd $FABRIC_BINARY
 	
 	log yellow "===> download binary tools (ca-client): exec bootstrap.sh 1.2.0 -b"
-	#source bootstrap.sh ${fabric_binary_version} -b
+	#source bootstrap.sh ${FABRIC_BINARY_VERSION} -b
+	
+	log yellow "===> Downloading platform specific fabric binaries"
+	#curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz | tar xz
+
+	log yellow "===> Downloading platform specific fabric-ca-client binary"
+	#curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric-ca/hyperledger-fabric-ca/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-ca-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz
 fi
 
 log done "download binary fabric tools"
@@ -402,7 +408,7 @@ log done "download binary fabric tools"
 log blue "-----------------pull fabric docker image--------------------"
 
 log yellow "===> pull docker hyperledger/fabric images"
-#source bootstrap.sh ${fabric_binary_version} -d
+#source bootstrap.sh ${FABRIC_BINARY_VERSION} -d
 
 log yellow "===> preview hyperledger/fabric images"
 #docker images hyperledger/fabric-*
