@@ -27,7 +27,8 @@ HYPERLEDGER_DIR="/opt/gopath/src/github.com/hyperledger"
 FABRIC_BINARY="release/$ARCH/bin"
 
 FABRIC_VERSION=v1.1.0
-FABRIC_BINARY_VERSION=`echo $FABRIC_VERSION | sed 's/\v//g'` 
+FABRIC_BINARY_VERSION=`echo $FABRIC_VERSION | sed 's/v//g'` 
+THIRDPARTY_IMAGE_VERSION=0.4.6
 
 GO_VER=1.11
 GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
@@ -469,13 +470,13 @@ if [ -d "$HYPERLEDGER_DIR/fabric/$FABRIC_BINARY" ]; then
 	if (( line <= 0 )); then
 		log yellow "===> ${FABRIC_BINARY} dir is empty, make binary file"
 
-		#make clean gotools
+		make clean gotools
 		make release
 	fi	
 else
 	log yellow "===> not found fabric tools binary release dir: ${FABRIC_BINARY}"
 	
-	#make clean gotools
+	make clean gotools
 	make release
 fi
 
@@ -505,7 +506,7 @@ if [ ! -d "$HYPERLEDGER_DIR/fabric/$FABRIC_BINARY" ]; then
 	cd $MASTER_WORKDIR
 	
 	log yellow "===> download binary tools (ca-client): exec bootstrap.sh 1.2.0 -b"	
-	source bootstrap-1.2.sh ${FABRIC_BINARY_VERSION} -b
+	source bootstrap-1.1.sh #${FABRIC_BINARY_VERSION} ${FABRIC_BINARY_VERSION} $THIRDPARTY_IMAGE_VERSION -b
 		
 	log yellow "===> switch workdir to $FABRIC_BINARY"
 	cd $FABRIC_BINARY
@@ -528,7 +529,7 @@ log yellow "===> switch workdir to $MASTER_WORKDIR"
 cd $MASTER_WORKDIR
 
 log yellow "===> pull docker hyperledger/fabric images"
-source bootstrap-1.2.sh ${FABRIC_BINARY_VERSION} -d
+source bootstrap-1.1.sh #${FABRIC_BINARY_VERSION} ${FABRIC_BINARY_VERSION} $THIRDPARTY_IMAGE_VERSION -d
 
 log yellow "===> preview hyperledger/fabric images"
 docker images hyperledger/fabric-*
