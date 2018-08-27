@@ -116,7 +116,7 @@ if [ `command -v yum` ]; then
 	which yum
 
 	# update yum
-	sudo yum -y update
+	#sudo yum -y update
 
 	# Install some basic utilities
 	log yellow "===> Install some basic utilities packages"
@@ -459,9 +459,9 @@ log blue "-----------------make binary fabric tools--------------------"
 log yellow "===> current workdir to $PWD"
 log yellow "===> switch workdir to $HYPERLEDGER_DIR/fabric"
 
-[ -d fabric ] && cd fabric
+cd $HYPERLEDGER_DIR/fabric
 
-if [ -d "$FABRIC_BINARY" ]; then
+if [ -d "$HYPERLEDGER_DIR/fabric/$FABRIC_BINARY" ]; then
 	log yellow "===> already existing release dir: $FABRIC_BINARY"
 	ls -al ${FABRIC_BINARY}
 
@@ -496,7 +496,7 @@ log done "make binary fabric tools"
 #----------------------------------------------------------------------
 log blue "--------------download binary fabric tools-------------------"
 
-if [ ! -d "$FABRIC_BINARY" ]; then
+if [ ! -d "$HYPERLEDGER_DIR/fabric/$FABRIC_BINARY" ]; then
 	
 	log yellow "===> create binary dir $FABRIC_BINARY"
 	mkdir -pv $FABRIC_BINARY
