@@ -335,6 +335,8 @@ else
 	log yellow "===> install docker"
 	##apt-get install -y docker-ce=17.06.2~ce~0~ubuntu  # in case we need to set the version
 	apt-get install -y docker-ce
+
+	#usermod -a -G docker ${USER} # Add ubuntu user to the docker group
 fi	
 
 log done "install docker"
