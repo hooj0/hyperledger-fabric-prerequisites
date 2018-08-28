@@ -9,8 +9,8 @@
 
 # @changelog Redhat-style system Hyperledger fabric prerequisites environment software and tools setup script
 
-set -e
-set -uo pipefail
+set -eu
+set -o pipefail
 trap "echo 'error: Script failed: see failed command above'" ERR
 
 
@@ -19,12 +19,20 @@ trap "echo 'error: Script failed: see failed command above'" ERR
 export ARCH=$(echo "$(uname -s|tr '[:upper:]' '[:lower:]'|sed 's/mingw64_nt.*/windows/')-$(uname -m | sed 's/x86_64/amd64/g')")
 export MARCH=$(uname -m)
 
+export GOPATH="/opt/gopath"
+export GOROOT="/opt/go"
+export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
-# variables
+
+
+# local variables
 #----------------------------------------------------------------------
+echo "----------------------local variables-----------------------"
+
 WORKDIR="/tmp/fabric"
 HYPERLEDGER_DIR="/opt/gopath/src/github.com/hyperledger"
-FABRIC_BINARY="release/$ARCH/bin"
+FABRIC_BINARY_PARENT="$HYPERLEDGER_DIR/fabric/release/$ARCH"
+FABRIC_BINARY="$HYPERLEDGER_DIR/fabric/release/$ARCH/bin"
 
 FABRIC_VERSION=v1.1.0
 FABRIC_BINARY_VERSION=`echo $FABRIC_VERSION | sed 's/v//g'` 
@@ -42,8 +50,10 @@ ENV_PROFILE="/home/$USER/.bash_profile"
 
 GIT_VERSOIN="2.7.3"
 #GIT_VERSOIN="2.13.1"
+GIT_OLD_VERSION="x86_64"
 
 MASTER_WORKDIR="$PWD"
+
 
 echo "WORKDIR=${WORKDIR}"
 echo "HYPERLEDGER_DIR=${HYPERLEDGER_DIR}"
@@ -56,25 +66,41 @@ echo "GO_VERSION=${GO_VER}"
 echo "ENV_BASHRC=${ENV_BASHRC}"
 echo "ENV_PROFILE=${ENV_PROFILE}"
 
-export GOPATH="/opt/gopath"
-export GOROOT="/opt/go"
-export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
+# set role
+#----------------------------------------------------------------------
+group="${USER}"
+function settingGroup() {
+	echo "----------------------setting user & group--------------------"
+	set +e
+	group="hyperledger" 
+	count=`egrep "^$group" /etc/group | wc -l`
+	if [ $count -eq 0 ]; then
+	    sudo groupadd $group
+	fi
+
+	#sudo usermod -a -G $group ${USER}
+	sudo gpasswd -a ${USER} $group
+	set -e
+}
+
 
 # function
 #----------------------------------------------------------------------
-function settingGoEnv() {
+echo "-------------------------function difined-----------------------"
+
+function settingEnv() {
 log yellow "===> write env to $ENV_BASHRC"
 
 [ ! -f $ENV_BASHRC ] && > $ENV_BASHRC
 
-sudo cat > $ENV_BASHRC <<EOF
-export GOPATH="/opt/gopath"
-export GOROOT="/opt/go"
-export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+sudo cat >> $ENV_BASHRC <<-EOF
 EOF
 
 # use env
 source $ENV_BASHRC
+[ -f $ENV_PROFILE ] && source $ENV_PROFILE
+
 }
 
 function settingGoProfile() {
@@ -82,11 +108,23 @@ log yellow "===> setting go env to ${ENV_PROFILE}"
 
 [ ! -f $ENV_PROFILE ] && > $ENV_PROFILE
 
-#cat <<EOF>${ENV_PROFILE}
-sudo cat > ${ENV_PROFILE} <<EOF
-export GOROOT=$GOROOT
-export GOPATH=$GOPATH
-export PATH=\$PATH:$GOROOT/bin:$GOPATH/bin
+sudo cat >> ${ENV_PROFILE} <<-EOF
+export GOPATH="/opt/gopath"
+export GOROOT="/opt/go"
+export PATH=\$GOROOT/bin:\$GOPATH/bin:\$PATH
+EOF
+
+# use env
+source $ENV_PROFILE
+}
+
+function settingGitProfile() {
+log yellow "===> setting git env to ${ENV_PROFILE}"
+
+[ ! -f $ENV_PROFILE ] && > $ENV_PROFILE
+
+sudo cat >> ${ENV_PROFILE} <<-EOF
+export PATH=\$PATH:/usr/local/git/bin
 EOF
 
 # use env
@@ -147,11 +185,7 @@ log done "update system"
 #----------------------------------------------------------------------
 log blue "-------------------------export env--------------------------"
 
-if [ "${GOPATH}" ]; then	
-	log yellow "===> already existing env $ENV_BASHRC"	
-else
-	settingGoEnv	
-fi
+settingEnv
 
 log yellow "===> env | grep go"
 #env | grep go
@@ -208,17 +242,20 @@ if [ `command -v go` ]; then
 	log yellow "===> already existing language"
 	which go
 else
-	log yellow "===> install go language 1.9+"	
-	
-	# Set Go environment variables needed by other scripts
-	PATH=$GOROOT/bin:$GOPATH/bin:$PATH
-
-	settingGoProfile
+	log yellow "===> install go language 1.9+"			
 
 	log yellow "===> create go language compiler dir"
 	[ ! -d $GOROOT ] && sudo mkdir -pv $GOROOT
 	[ ! -d $GOPATH/bin ] && sudo mkdir -pv $GOPATH/bin
 	[ ! -d $GOPATH/pkg ] && sudo mkdir -pv $GOPATH/pkg
+
+	sudo chown -R $USER:$group $GOPATH
+	sudo chown -R $USER:$group $GOPATH/bin
+	sudo chown -R $USER:$group $GOPATH/pkg
+
+	#sudo chmod -R +777 $GOROOT
+	#sudo chmod -R +777 $GOPATH/bin
+	#sudo chmod -R +777 $GOPATH/pkg
 
 	log yellow "===> download go language: ${GO_URL}, to directory: $GOROOT"
 	#curl -sL $GO_URL | (cd $GOROOT && tar --strip-components 1 -xz)	
@@ -228,6 +265,8 @@ else
 
 	ls -al
 	sudo tar -zxvf go${GO_VER}.linux-amd64.tar.gz -C /opt/
+
+	settingGoProfile
 fi	
 
 go version
@@ -238,6 +277,38 @@ log done "install golang"
 # Install Git 
 #----------------------------------------------------------------------
 log blue "------------------------install git--------------------------"
+
+function upgradeGit() {
+	log yellow "===> upgrade git version to ${GIT_VERSOIN}"	
+
+	log yellow "===> upgrade git dependency base package"
+	sudo yum install -y curl-devel expat-devel gettext-devel openssl-devel zlib-devel
+	sudo yum install -y gcc perl-ExtUtils-MakeMaker	
+
+	sudo yum list installed | grep git
+	sudo yum -y remove "git.$GIT_OLD_VERSION"
+
+	log yellow "===> download git version: ${GIT_VERSOIN} to $PWD"
+	
+	if [ ! -f "git-${GIT_VERSOIN}.tar.gz" ]; then
+		wget https://www.kernel.org/pub/software/scm/git/git-${GIT_VERSOIN}.tar.gz
+	fi	
+	
+ 	sudo tar -zxvf git-${GIT_VERSOIN}.tar.gz
+
+	cd git-${GIT_VERSOIN}
+
+	log yellow "===> make git ${GIT_VERSOIN} to '/usr/local/git'"
+	# ./configure --without-iconv
+	# make CFLAGS=-liconv prefix=/usr/local/git all
+	# make CFLAGS=-liconv prefix=/usr/local/git install
+
+	sudo make prefix=/usr/local/git all
+	sudo make prefix=/usr/local/git install
+
+	log yellow "===> setting git env"
+	settingGitProfile	
+}
 
 if [ `command -v git` ]; then
 	log yellow "===> already existing git"
@@ -252,45 +323,12 @@ if [ `command -v git` ]; then
 	if [ "$git_ver" == "git version ${GIT_VERSOIN}" ]; then
 		log yellow "current is latest version $git_ver"		
 	else				
-		log yellow "===> remove old version git"
-		sudo yum -y remove git		
-	fi		
-fi
+		log yellow "===> remove old version git.$GIT_OLD_VERSION"
 
-
-if [ -z "`command -v git`" ]; then
-
-	log yellow "<<<<=== start upgrade git version to ${GIT_VERSOIN}"	
-
-	log yellow "===> upgrade git dependency base package"
-	sudo yum install -y curl-devel expat-devel gettext-devel openssl-devel zlib-devel
-	sudo yum install -y gcc perl-ExtUtils-MakeMaker	
-
-	log yellow "===> download git version: ${GIT_VERSOIN} to $PWD"
-	
-	if [ ! -f "git-${GIT_VERSOIN}.tar.gz" ]; then
-		wget https://www.kernel.org/pub/software/scm/git/git-${GIT_VERSOIN}.tar.gz
+		upgradeGit
 	fi	
-	
- 	sudo tar -zxvf git-${GIT_VERSOIN}.tar.gz
-
-	cd git-${GIT_VERSOIN}
-
-	log yellow "===> make git ${GIT_VERSOIN} to /usr/local/git"
-	# ./configure --without-iconv
-	# make CFLAGS=-liconv prefix=/usr/local/git all
-	# make CFLAGS=-liconv prefix=/usr/local/git install
-
-	make prefix=/usr/local/git all
-	make prefix=/usr/local/git install
-
-	log yellow "===> setting git env"
-	
-	[ -f "/etc/bashrc" ] && echo "export PATH=$PATH:/usr/local/git/bin" >> /etc/bashrc
-	[ -f "$ENV_PROFILE" ] && echo "export PATH=$PATH:/usr/local/git/bin" >> $ENV_PROFILE
-
-	source /etc/bashrc
-	source $ENV_PROFILE			
+else
+	upgradeGit		
 fi	
 
 git --version
@@ -307,11 +345,15 @@ if  [ -d "$HYPERLEDGER_DIR/fabric" ]; then
 else
 	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric"
 
-	[ ! -z $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
+	[ ! -z $HYPERLEDGER_DIR ] && sudo mkdir -pv $HYPERLEDGER_DIR
 	cd $HYPERLEDGER_DIR
 	
 	log yellow "===> clone fabric code to: $PWD/fabric"
-	git clone https://github.com/hyperledger/fabric.git	
+	sudo mkdir -pv $HYPERLEDGER_DIR/fabric && \
+	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric	
+
+	git clone https://github.com/hyperledger/fabric.git fabric
+	sudo chown -R $USER:$group $HYPERLEDGER_DIR/fabric	
 
 	log yellow "===> enter the source directory: $HYPERLEDGER_DIR/fabric"
 	cd "$HYPERLEDGER_DIR/fabric"
@@ -339,14 +381,19 @@ if  [ -d "$HYPERLEDGER_DIR/fabric-ca" ]; then
 else
 	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric-ca"
 
-	[ ! -d $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
+	[ ! -d $HYPERLEDGER_DIR ] && sudo mkdir -pv $HYPERLEDGER_DIR
 
 	log yellow "===> switch workdir $WORKDIR"
 	cd $HYPERLEDGER_DIR
 	echo "current pwd: $PWD" 
 
 	log yellow "===> clone fabric-ca code to: $PWD/fabric-ca"
-	git clone https://github.com/hyperledger/fabric-ca.git	
+	sudo mkdir -pv $HYPERLEDGER_DIR/fabric-ca
+	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-ca
+
+	git clone https://github.com/hyperledger/fabric-ca.git
+	sudo chown -R $USER:$group $HYPERLEDGER_DIR/fabric-ca
+	
 
 	log yellow "===> enter the source directory: $HYPERLEDGER_DIR/fabric-ca"
 	cd $HYPERLEDGER_DIR/fabric-ca
@@ -370,15 +417,20 @@ log blue "-----------------download fabric samples code----------------"
 
 if  [ -d "$HYPERLEDGER_DIR/fabric-samples" ]; then
 	log yellow "===> already existing code: $HYPERLEDGER_DIR/fabric-samples"
+	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-samples
 else
 	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric-samples"
 
-	[ ! -d $HYPERLEDGER_DIR ] && mkdir -pv $HYPERLEDGER_DIR
+	[ ! -d $HYPERLEDGER_DIR ] && sudo mkdir -pv $HYPERLEDGER_DIR
 	cd $HYPERLEDGER_DIR
 
 	log yellow "===> clone fabric samples code to: $PWD/fabric-samples"
-	git clone https://github.com/hyperledger/fabric-samples.git
+	sudo mkdir -pv $HYPERLEDGER_DIR/fabric-samples
+	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-samples
 
+	git clone https://github.com/hyperledger/fabric-samples.git
+	sudo chown -R $USER:$group $HYPERLEDGER_DIR/fabric-samples	
+	
 	log yellow "===> enter the source directory: $HYPERLEDGER_DIR/fabric-samples"
 	cd $HYPERLEDGER_DIR/fabric-samples
 
@@ -404,7 +456,6 @@ if [ "`command -v docker`" ]; then
 	which docker
 else
 	log yellow "===> download docker & install docker"
-
 
 	log yellow "===> remove old docker & install docker"
 	sudo yum remove -y docker \
@@ -432,9 +483,12 @@ else
 	#sudo yum install docker-ce-<VERSION STRING>
 	#sudo yum install docker-ce-[18.03.0.ce]
 	
+	log yellow "===> add ${USER} to docker group"
+	sudo gpasswd -a ${USER} docker
+
 	log yellow "===> start docker service"
-	sudo systemctl start docker
-	#sudo service docker start
+	sudo systemctl start docker	
+	#sudo service docker start		
 fi	
 
 docker -v
@@ -451,9 +505,16 @@ if [ "`command -v docker-compose`" ]; then
 	which docker-compose
 else	
 	log yellow "===> download docker compose & install docker-compose"
+
+	log yellow "===> switch workdir $WORKDIR"
+	echo "current pwd: $PWD" 
+
+	cd $WORKDIR
+	log yellow "latest pwd: $PWD"
+
 	# Install docker-compose
-	curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-	sudo chmod +x /usr/local/bin/docker-compose
+	sudo curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-`uname -s`-`uname -m` > docker-compose
+	sudo mv -v docker-compose /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose	
 fi
 
 docker-compose -v
@@ -468,35 +529,95 @@ log done "install docker compose"
 
 # Make Binary Fabric File
 #----------------------------------------------------------------------
-log blue "-----------------make binary fabric tools--------------------"
+function skip() {
+	log blue "-----------------make binary fabric tools--------------------"
 
-#create var/hyperledger dir
-#sudo mkdir -pv /var/hyperledger
-#sudo chown -R ubuntu:ubuntu /var/hyperledger
+	#create var/hyperledger dir
+	#sudo mkdir -pv /var/hyperledger
+	#sudo chown -R ubuntu:ubuntu /var/hyperledger
 
-log yellow "===> current workdir to $PWD"
-log yellow "===> switch workdir to $HYPERLEDGER_DIR/fabric"
+	log yellow "===> current workdir to $PWD"
+	log yellow "===> switch workdir to $HYPERLEDGER_DIR/fabric"
 
-cd $HYPERLEDGER_DIR/fabric
+	cd $HYPERLEDGER_DIR/fabric
 
-if [ -d "$HYPERLEDGER_DIR/fabric/$FABRIC_BINARY" ]; then
-	log yellow "===> already existing release dir: $FABRIC_BINARY"
-	ls -al ${FABRIC_BINARY}
+	if [ -d "$FABRIC_BINARY" ]; then
+		log yellow "===> already existing release dir: $FABRIC_BINARY"
+		ls -al ${FABRIC_BINARY}
 
-	line=`ls -al ${FABRIC_BINARY} | wc -l`
-	if (( line <= 0 )); then
-		log yellow "===> ${FABRIC_BINARY} dir is empty, make binary file"
+		line=`ls -al ${FABRIC_BINARY} | wc -l`
+		if (( line <= 0 )); then
+			log yellow "===> ${FABRIC_BINARY} dir is empty, make binary file"
 
-		make clean gotools
-		make release
+			sudo make clean gotools
+			sudo make release
+		fi	
+	else
+		log yellow "===> not found fabric tools binary release dir: ${FABRIC_BINARY}"
+		
+		sudo make clean gotools
+		sudo make release
+	fi
+
+	if [ "`command -v cryptogen`" ]; then
+		log yellow "===> already existing cryptogen"
+		which cryptogen
+	else
+		log yellow "===> copy ${FABRIC_BINARY}/ -->> 'usr/bin' dir"
+
+		sudo cp -rv $FABRIC_BINARY /usr/bin/
 	fi	
-else
-	log yellow "===> not found fabric tools binary release dir: ${FABRIC_BINARY}"
-	
-	make clean gotools
-	make release
-fi
 
+	log done "make binary fabric tools"
+}
+
+# Download binary cryptogen/configtxgen/ca-client
+#----------------------------------------------------------------------
+log blue "--------------download binary fabric tools-------------------"
+
+if [ ! -d "$FABRIC_BINARY" ]; then
+
+	log yellow "===> current workdir to $PWD"
+	log yellow "===> switch workdir to $HYPERLEDGER_DIR/fabric"
+
+	cd $HYPERLEDGER_DIR/fabric
+	
+	log yellow "===> create binary dir $FABRIC_BINARY"
+	sudo mkdir -pv $FABRIC_BINARY \
+	&& sudo chown -R $USER:$group $FABRIC_BINARY
+	sudo chmod -R +777 $FABRIC_BINARY
+
+	log yellow "===> switch workdir to $MASTER_WORKDIR"
+	cd $MASTER_WORKDIR
+	
+	log yellow "===> prepar download binary tools (ca-client, cryptogen, configtxgen): exec bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}"	
+	source bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}
+		
+	log yellow "===> switch workdir to $WORKDIR"
+	cd $WORKDIR
+	
+	log yellow "===> Downloading platform specific fabric binaries"
+	#curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz | tar xz
+	if [ ! -f "hyperledger-fabric-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz" ]; then
+		wget https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz
+	fi
+
+	ls -al
+	sudo tar -zxvf hyperledger-fabric-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz -C $FABRIC_BINARY_PARENT
+	
+
+	log yellow "===> Downloading platform specific fabric-ca-client binary"	
+	#curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric-ca/hyperledger-fabric-ca/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-ca-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz | tar xz
+	if [ ! -f "hyperledger-fabric-ca-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz" ]; then
+		wget https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric-ca/hyperledger-fabric-ca/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-ca-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz
+	fi
+
+	ls -al
+	sudo tar -zxvf hyperledger-fabric-ca-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz -C $FABRIC_BINARY_PARENT
+
+	sudo chmod -R +777 $FABRIC_BINARY
+	sudo chown -R $USER:$group $FABRIC_BINARY
+fi
 
 if [ "`command -v cryptogen`" ]; then
 	log yellow "===> already existing cryptogen"
@@ -504,36 +625,8 @@ if [ "`command -v cryptogen`" ]; then
 else
 	log yellow "===> copy ${FABRIC_BINARY}/ -->> 'usr/bin' dir"
 
-	cp -rv $FABRIC_BINARY /usr/bin/
+	sudo cp -rv $FABRIC_BINARY /usr/bin/
 fi	
-
-log done "make binary fabric tools"
-
-
-# Download binary cryptogen/configtxgen/ca-client
-#----------------------------------------------------------------------
-log blue "--------------download binary fabric tools-------------------"
-
-if [ ! -d "$HYPERLEDGER_DIR/fabric/$FABRIC_BINARY" ]; then
-	
-	log yellow "===> create binary dir $FABRIC_BINARY"
-	mkdir -pv $FABRIC_BINARY
-
-	log yellow "===> switch workdir to $MASTER_WORKDIR"
-	cd $MASTER_WORKDIR
-	
-	log yellow "===> download binary tools (ca-client): exec bootstrap.sh 1.2.0 -b"	
-	source bootstrap-1.1.sh #${FABRIC_BINARY_VERSION} ${FABRIC_BINARY_VERSION} $THIRDPARTY_IMAGE_VERSION -b
-		
-	log yellow "===> switch workdir to $FABRIC_BINARY"
-	cd $FABRIC_BINARY
-	
-	#log yellow "===> Downloading platform specific fabric binaries"
-	#curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz | tar xz
-
-	#log yellow "===> Downloading platform specific fabric-ca-client binary"
-	#curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric-ca/hyperledger-fabric-ca/${ARCH}-${FABRIC_BINARY_VERSION}/hyperledger-fabric-ca-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz
-fi
 
 log done "download binary fabric tools"
 
@@ -544,11 +637,13 @@ log blue "-----------------pull fabric docker image--------------------"
 
 log yellow "===> switch workdir to $MASTER_WORKDIR"
 cd $MASTER_WORKDIR
+sudo mkdir -pv /var/hyperledger && sudo chown -R $USER:$group /var/hyperledger && sudo chown -R +777 /var/hyperledger
 
 log yellow "===> pull docker hyperledger/fabric images"
-source bootstrap-1.1.sh #${FABRIC_BINARY_VERSION} ${FABRIC_BINARY_VERSION} $THIRDPARTY_IMAGE_VERSION -d
+source bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}
+dockerHyperledgerImagePull
 
 log yellow "===> preview hyperledger/fabric images"
-docker images hyperledger/fabric-*
+sudo docker images "hyperledger/fabric-"
 
 log done "pull fabric docker image"
