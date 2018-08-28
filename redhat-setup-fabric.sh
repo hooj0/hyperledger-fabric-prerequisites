@@ -31,11 +31,14 @@ FABRIC_BINARY_VERSION=`echo $FABRIC_VERSION | sed 's/v//g'`
 THIRDPARTY_IMAGE_VERSION=0.4.6
 
 GO_VER=1.11
-GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
+#GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
+GO_URL=https://studygolang.com/dl/golang/go${GO_VER}.linux-amd64.tar.gz
 
-ENV_BASHRC="~/.bashrc"
+#ENV_BASHRC="/etc/bashrc"
+ENV_BASHRC="/home/$USER/.bashrc"
 #ENV_PROFILE="/etc/profile.d/goroot.sh"
-ENV_PROFILE="/etc/profile"
+#ENV_PROFILE="/etc/profile"
+ENV_PROFILE="/home/$USER/.bash_profile"
 
 GIT_VERSOIN="2.7.3"
 #GIT_VERSOIN="2.13.1"
@@ -53,10 +56,16 @@ echo "GO_VERSION=${GO_VER}"
 echo "ENV_BASHRC=${ENV_BASHRC}"
 echo "ENV_PROFILE=${ENV_PROFILE}"
 
+export GOPATH="/opt/gopath"
+export GOROOT="/opt/go"
+export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
 # function
 #----------------------------------------------------------------------
 function settingGoEnv() {
 log yellow "===> write env to $ENV_BASHRC"
+
+[ ! -f $ENV_BASHRC ] && > $ENV_BASHRC
 
 sudo cat > $ENV_BASHRC <<EOF
 export GOPATH="/opt/gopath"
@@ -70,6 +79,8 @@ source $ENV_BASHRC
 
 function settingGoProfile() {
 log yellow "===> setting go env to ${ENV_PROFILE}"
+
+[ ! -f $ENV_PROFILE ] && > $ENV_PROFILE
 
 #cat <<EOF>${ENV_PROFILE}
 sudo cat > ${ENV_PROFILE} <<EOF
@@ -136,10 +147,10 @@ log done "update system"
 #----------------------------------------------------------------------
 log blue "-------------------------export env--------------------------"
 
-if [ -z ${GOPATH} ]; then
-	settingGoEnv
-else
+if [ "${GOPATH}" ]; then	
 	log yellow "===> already existing env $ENV_BASHRC"	
+else
+	settingGoEnv	
 fi
 
 log yellow "===> env | grep go"
@@ -155,7 +166,7 @@ log done "export env"
 #----------------------------------------------------------------------
 log blue "-----------------------switch workdir------------------------"
 
-if [ -d $WORKDIR ]; then
+if [ -d "$WORKDIR" ]; then
 	log yellow "===> already existing workdir $WORKDIR"
 else
 	log yellow "===> create workdir $WORKDIR"
@@ -205,12 +216,18 @@ else
 	settingGoProfile
 
 	log yellow "===> create go language compiler dir"
-	[ ! -d $GOROOT ] && mkdir -pv $GOROOT
-	[ ! -d $GOPATH/bin ] && mkdir -pv $GOPATH/bin
-	[ ! -d $GOPATH/pkg ] && mkdir -pv $GOPATH/pkg
+	[ ! -d $GOROOT ] && sudo mkdir -pv $GOROOT
+	[ ! -d $GOPATH/bin ] && sudo mkdir -pv $GOPATH/bin
+	[ ! -d $GOPATH/pkg ] && sudo mkdir -pv $GOPATH/pkg
 
-	log yellow "===> download go language: ${GO_URL}"
-	curl -sL $GO_URL | (cd $GOROOT && tar --strip-components 1 -xz)
+	log yellow "===> download go language: ${GO_URL}, to directory: $GOROOT"
+	#curl -sL $GO_URL | (cd $GOROOT && tar --strip-components 1 -xz)	
+	if [ ! -f "go${GO_VER}.linux-amd64.tar.gz" ]; then
+		wget $GO_URL 
+	fi
+
+	ls -al
+	sudo tar -zxvf go${GO_VER}.linux-amd64.tar.gz -C /opt/
 fi	
 
 go version
