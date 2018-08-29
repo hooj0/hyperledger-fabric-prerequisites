@@ -69,18 +69,18 @@ echo "ENV_PROFILE=${ENV_PROFILE}"
 
 # set role
 #----------------------------------------------------------------------
-group="${USER}"
+GROUP="${USER}"
 function settingGroup() {
 	echo "----------------------setting user & group--------------------"
 	set +e
-	group="hyperledger" 
-	count=`egrep "^$group" /etc/group | wc -l`
+	GROUP="hyperledger" 
+	count=`egrep "^$GROUP" /etc/group | wc -l`
 	if [ $count -eq 0 ]; then
-	    sudo groupadd $group
+	    sudo groupadd $GROUP
 	fi
 
-	#sudo usermod -a -G $group ${USER}
-	sudo gpasswd -a ${USER} $group
+	#sudo usermod -a -G $GROUP ${USER}
+	sudo gpasswd -a ${USER} $GROUP
 	set -e
 }
 
@@ -249,9 +249,9 @@ else
 	[ ! -d $GOPATH/bin ] && sudo mkdir -pv $GOPATH/bin
 	[ ! -d $GOPATH/pkg ] && sudo mkdir -pv $GOPATH/pkg
 
-	sudo chown -R $USER:$group $GOPATH
-	sudo chown -R $USER:$group $GOPATH/bin
-	sudo chown -R $USER:$group $GOPATH/pkg
+	sudo chown -R $USER:$GROUP $GOPATH
+	sudo chown -R $USER:$GROUP $GOPATH/bin
+	sudo chown -R $USER:$GROUP $GOPATH/pkg
 
 	#sudo chmod -R +777 $GOROOT
 	#sudo chmod -R +777 $GOPATH/bin
@@ -345,7 +345,7 @@ if  [ -d "$HYPERLEDGER_DIR/fabric" ]; then
 else
 	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric"
 
-	[ ! -z $HYPERLEDGER_DIR ] && sudo mkdir -pv $HYPERLEDGER_DIR
+	[ ! -d $HYPERLEDGER_DIR ] && sudo mkdir -pv $HYPERLEDGER_DIR
 	cd $HYPERLEDGER_DIR
 	
 	log yellow "===> clone fabric code to: $PWD/fabric"
@@ -353,7 +353,7 @@ else
 	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric	
 
 	git clone https://github.com/hyperledger/fabric.git fabric
-	sudo chown -R $USER:$group $HYPERLEDGER_DIR/fabric	
+	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric	
 
 	log yellow "===> enter the source directory: $HYPERLEDGER_DIR/fabric"
 	cd "$HYPERLEDGER_DIR/fabric"
@@ -392,9 +392,8 @@ else
 	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-ca
 
 	git clone https://github.com/hyperledger/fabric-ca.git
-	sudo chown -R $USER:$group $HYPERLEDGER_DIR/fabric-ca
+	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-ca
 	
-
 	log yellow "===> enter the source directory: $HYPERLEDGER_DIR/fabric-ca"
 	cd $HYPERLEDGER_DIR/fabric-ca
 
@@ -426,10 +425,11 @@ else
 
 	log yellow "===> clone fabric samples code to: $PWD/fabric-samples"
 	sudo mkdir -pv $HYPERLEDGER_DIR/fabric-samples
-	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-samples
+	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-samples
+	#sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-samples
 
 	git clone https://github.com/hyperledger/fabric-samples.git
-	sudo chown -R $USER:$group $HYPERLEDGER_DIR/fabric-samples	
+	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-samples	
 	
 	log yellow "===> enter the source directory: $HYPERLEDGER_DIR/fabric-samples"
 	cd $HYPERLEDGER_DIR/fabric-samples
@@ -472,10 +472,12 @@ else
 	log yellow "===> Install required packages"
 	sudo yum install -y yum-utils device-mapper-persistent-data lvm2
 
+
 	log yellow "===> add docker repository"
 	sudo yum-config-manager \
     --add-repo \
     https://download.docker.com/linux/centos/docker-ce.repo	
+
 
 	log yellow "===> install docker"
 	sudo yum install -y docker-ce-18.03.1.ce
@@ -571,6 +573,7 @@ function skip() {
 	log done "make binary fabric tools"
 }
 
+
 # Download binary cryptogen/configtxgen/ca-client
 #----------------------------------------------------------------------
 log blue "--------------download binary fabric tools-------------------"
@@ -584,14 +587,8 @@ if [ ! -d "$FABRIC_BINARY" ]; then
 	
 	log yellow "===> create binary dir $FABRIC_BINARY"
 	sudo mkdir -pv $FABRIC_BINARY \
-	&& sudo chown -R $USER:$group $FABRIC_BINARY
-	sudo chmod -R +777 $FABRIC_BINARY
-
-	log yellow "===> switch workdir to $MASTER_WORKDIR"
-	cd $MASTER_WORKDIR
-	
-	log yellow "===> prepar download binary tools (ca-client, cryptogen, configtxgen): exec bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}"	
-	source bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}
+	&& sudo chown -R $USER:$GROUP $FABRIC_BINARY
+	#sudo chmod -R +x $FABRIC_BINARY	
 		
 	log yellow "===> switch workdir to $WORKDIR"
 	cd $WORKDIR
@@ -615,8 +612,8 @@ if [ ! -d "$FABRIC_BINARY" ]; then
 	ls -al
 	sudo tar -zxvf hyperledger-fabric-ca-${ARCH}-${FABRIC_BINARY_VERSION}.tar.gz -C $FABRIC_BINARY_PARENT
 
-	sudo chmod -R +777 $FABRIC_BINARY
-	sudo chown -R $USER:$group $FABRIC_BINARY
+	sudo chmod -R +x $FABRIC_BINARY
+	sudo chown -R $USER:$GROUP $FABRIC_BINARY
 fi
 
 if [ "`command -v cryptogen`" ]; then
@@ -637,7 +634,7 @@ log blue "-----------------pull fabric docker image--------------------"
 
 log yellow "===> switch workdir to $MASTER_WORKDIR"
 cd $MASTER_WORKDIR
-sudo mkdir -pv /var/hyperledger && sudo chown -R $USER:$group /var/hyperledger && sudo chown -R +777 /var/hyperledger
+sudo mkdir -pv /var/hyperledger && sudo chown -R $USER:$GROUP /var/hyperledger && sudo chown -R +777 /var/hyperledger
 
 log yellow "===> pull docker hyperledger/fabric images"
 source bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}
