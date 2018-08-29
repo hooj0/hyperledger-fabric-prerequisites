@@ -647,3 +647,15 @@ log yellow "===> preview hyperledger/fabric images"
 sudo docker images "hyperledger/fabric-"
 
 log done "pull fabric docker image"
+
+
+
+# run Fabric e2e_examples
+#----------------------------------------------------------------------
+log blue "-----------------run fabric e2e_examples---------------------"
+
+log yellow "===> switch workdir to e2e_examples"
+cd $HYPERLEDGER_DIR/fabric/examples/e2e_cli
+
+log yellow "===> latest directory: $PWD"
+./network_setup.sh up mychannel
