@@ -41,6 +41,7 @@ THIRDPARTY_IMAGE_VERSION=0.4.6
 GO_VER=1.11
 #GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
 GO_URL=https://studygolang.com/dl/golang/go${GO_VER}.linux-amd64.tar.gz
+
 #ENV_BASHRC="/etc/bashrc"
 ENV_BASHRC="/home/$USER/.bashrc"
 #ENV_PROFILE="/etc/profile.d/goroot.sh"
@@ -131,6 +132,20 @@ source $ENV_PROFILE
 }
 
 
+function settingBinaryProfile() {
+log yellow "===> setting binary env to ${ENV_PROFILE}"
+
+[ ! -f $ENV_PROFILE ] && > $ENV_PROFILE
+
+sudo cat >> ${ENV_PROFILE} <<-EOF
+export PATH=\$PATH:\$FABRIC_BINARY
+EOF
+
+# use env
+source $ENV_PROFILE
+}
+
+
 # import file
 #----------------------------------------------------------------------
 echo "-------------------------import file-------------------------"
@@ -199,7 +214,7 @@ log done "export env"
 #----------------------------------------------------------------------
 log blue "-----------------------switch workdir------------------------"
 
-if [ -d $WORKDIR ]; then
+if [ -d "$WORKDIR" ]; then
 	log yellow "===> already existing workdir $WORKDIR"
 else
 	log yellow "===> create workdir $WORKDIR"
@@ -249,10 +264,6 @@ else
 	sudo chown -R $USER:$GROUP $GOPATH
 	sudo chown -R $USER:$GROUP $GOPATH/bin
 	sudo chown -R $USER:$GROUP $GOPATH/pkg
-
-	#sudo chmod -R +777 $GOROOT
-	#sudo chmod -R +777 $GOPATH/bin
-	#sudo chmod -R +777 $GOPATH/pkg
 
 	log yellow "===> download go language: ${GO_URL}, to directory: $GOROOT"
 	#curl -sL $GO_URL | (cd $GOROOT && tar --strip-components 1 -xz)	
@@ -345,11 +356,9 @@ else
 	cd $HYPERLEDGER_DIR
     
     log yellow "===> clone fabric code to: $PWD/fabric"
-	sudo mkdir -pv $HYPERLEDGER_DIR/fabric && \
-	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric
-	#sudo chmod -R +777 $HYPERLEDGER_DIR/fabric
+	sudo mkdir -pv $HYPERLEDGER_DIR/fabric && sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric
 
-	git clone https://github.com/hyperledger/fabric.git
+	git clone https://github.com/hyperledger/fabric.git fabric
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric
 
     log yellow "===> enter the source directory: $HYPERLEDGER_DIR/fabric"
@@ -385,7 +394,6 @@ else
 	log yellow "===> clone fabric-ca code to: $PWD/fabric-ca"
 	sudo mkdir -pv $HYPERLEDGER_DIR/fabric-ca
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-ca
-	#sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-ca
 
 	git clone https://github.com/hyperledger/fabric-ca.git
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-ca
@@ -412,7 +420,6 @@ log blue "-----------------download fabric samples code----------------"
 
 if  [ -d "$HYPERLEDGER_DIR/fabric-samples" ]; then
 	log yellow "===> already existing code: $HYPERLEDGER_DIR/fabric-samples"
-	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-samples
 else
 	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric-samples"
 
@@ -422,7 +429,6 @@ else
 	log yellow "===> clone fabric samples code to: $PWD/fabric-samples"
 	sudo mkdir -pv $HYPERLEDGER_DIR/fabric-samples
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-samples
-	#sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-samples
 
 	git clone https://github.com/hyperledger/fabric-samples.git
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-samples	
@@ -552,7 +558,7 @@ function skip() {
 	else
 		log yellow "===> copy ${FABRIC_BINARY}/ -->> 'usr/bin' dir"
 
-		sudo cp -rv $FABRIC_BINARY /usr/bin/
+		sudo cp -rv $FABRIC_BINARY/* /usr/bin/
 	fi	
 
 	log done "make binary fabric tools"
@@ -607,7 +613,8 @@ if [ "`command -v cryptogen`" ]; then
 else
 	log yellow "===> copy ${FABRIC_BINARY}/ -->> 'usr/bin' dir"
 
-	sudo cp -rv $FABRIC_BINARY /usr/bin/
+	#sudo cp -rv $FABRIC_BINARY/* /usr/bin/
+    settingBinaryProfile
 fi	
 
 log done "download binary fabric tools"
