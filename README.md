@@ -23,6 +23,11 @@ start install fabric prerequisites environment software and tools.
 + make & download fabric binary file
 + pull fabric required docker image
 
+## run fabric e2e examples
+```sh
+cd /opt/gopath/src/github.com/hyperledger/fabric/examples/e2e_cli
+./network_setup.sh up mychannel
+```
 
 # setup java dev env
 execute the script below:
