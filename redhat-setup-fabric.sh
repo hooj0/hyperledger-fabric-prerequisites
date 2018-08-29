@@ -131,6 +131,19 @@ EOF
 source $ENV_PROFILE
 }
 
+function settingBinaryProfile() {
+log yellow "===> setting binary env to ${ENV_PROFILE}"
+
+[ ! -f $ENV_PROFILE ] && > $ENV_PROFILE
+
+sudo cat >> ${ENV_PROFILE} <<-EOF
+export PATH=\$PATH:\$FABRIC_BINARY
+EOF
+
+# use env
+source $ENV_PROFILE
+}
+
 
 # import file
 #----------------------------------------------------------------------
@@ -253,10 +266,6 @@ else
 	sudo chown -R $USER:$GROUP $GOPATH/bin
 	sudo chown -R $USER:$GROUP $GOPATH/pkg
 
-	#sudo chmod -R +777 $GOROOT
-	#sudo chmod -R +777 $GOPATH/bin
-	#sudo chmod -R +777 $GOPATH/pkg
-
 	log yellow "===> download go language: ${GO_URL}, to directory: $GOROOT"
 	#curl -sL $GO_URL | (cd $GOROOT && tar --strip-components 1 -xz)	
 	if [ ! -f "go${GO_VER}.linux-amd64.tar.gz" ]; then
@@ -349,8 +358,7 @@ else
 	cd $HYPERLEDGER_DIR
 	
 	log yellow "===> clone fabric code to: $PWD/fabric"
-	sudo mkdir -pv $HYPERLEDGER_DIR/fabric && \
-	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric	
+	sudo mkdir -pv $HYPERLEDGER_DIR/fabric && sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric
 
 	git clone https://github.com/hyperledger/fabric.git fabric
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric	
@@ -389,7 +397,7 @@ else
 
 	log yellow "===> clone fabric-ca code to: $PWD/fabric-ca"
 	sudo mkdir -pv $HYPERLEDGER_DIR/fabric-ca
-	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-ca
+	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-ca
 
 	git clone https://github.com/hyperledger/fabric-ca.git
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-ca
@@ -416,7 +424,6 @@ log blue "-----------------download fabric samples code----------------"
 
 if  [ -d "$HYPERLEDGER_DIR/fabric-samples" ]; then
 	log yellow "===> already existing code: $HYPERLEDGER_DIR/fabric-samples"
-	sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-samples
 else
 	log yellow "===> create fabric code dir: $HYPERLEDGER_DIR/fabric-samples"
 
@@ -426,7 +433,6 @@ else
 	log yellow "===> clone fabric samples code to: $PWD/fabric-samples"
 	sudo mkdir -pv $HYPERLEDGER_DIR/fabric-samples
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-samples
-	#sudo chmod -R +777 $HYPERLEDGER_DIR/fabric-samples
 
 	git clone https://github.com/hyperledger/fabric-samples.git
 	sudo chown -R $USER:$GROUP $HYPERLEDGER_DIR/fabric-samples	
@@ -489,8 +495,8 @@ else
 	sudo gpasswd -a ${USER} docker
 
 	log yellow "===> start docker service"
-	sudo systemctl start docker	
-	#sudo service docker start		
+	sudo systemctl restart docker	
+	#sudo service docker restart		
 fi	
 
 docker -v
@@ -567,7 +573,7 @@ function skip() {
 	else
 		log yellow "===> copy ${FABRIC_BINARY}/ -->> 'usr/bin' dir"
 
-		sudo cp -rv $FABRIC_BINARY /usr/bin/
+		sudo cp -rv $FABRIC_BINARY/* /usr/bin/
 	fi	
 
 	log done "make binary fabric tools"
@@ -622,7 +628,8 @@ if [ "`command -v cryptogen`" ]; then
 else
 	log yellow "===> copy ${FABRIC_BINARY}/ -->> 'usr/bin' dir"
 
-	sudo cp -rv $FABRIC_BINARY /usr/bin/
+	#sudo cp -rv $FABRIC_BINARY/* /usr/bin/
+	settingBinaryProfile
 fi	
 
 log done "download binary fabric tools"
@@ -634,7 +641,7 @@ log blue "-----------------pull fabric docker image--------------------"
 
 log yellow "===> switch workdir to $MASTER_WORKDIR"
 cd $MASTER_WORKDIR
-sudo mkdir -pv /var/hyperledger && sudo chown -R $USER:$GROUP /var/hyperledger && sudo chown -R +777 /var/hyperledger
+sudo mkdir -pv /var/hyperledger && sudo chown -R $USER:$USER /var/hyperledger
 
 log yellow "===> pull docker hyperledger/fabric images"
 source bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}
