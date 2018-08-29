@@ -573,13 +573,7 @@ if [ ! -d "$FABRIC_BINARY" ]; then
 	log yellow "===> create binary dir $FABRIC_BINARY"
 	sudo mkdir -pv $FABRIC_BINARY \
 	&& sudo chown -R $USER:$GROUP $FABRIC_BINARY
-	#sudo chmod -R +x $FABRIC_BINARY
-
-	log yellow "===> switch workdir to $MASTER_WORKDIR"
-	cd $MASTER_WORKDIR
-	
-	log yellow "===> prepar download binary tools (ca-client, cryptogen, configtxgen): exec bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}"	
-	source bootstrap-1.1.sh ${FABRIC_BINARY_VERSION}
+	#sudo chmod -R +x $FABRIC_BINARY	
 		
 	log yellow "===> switch workdir to $WORKDIR"
 	cd $WORKDIR
