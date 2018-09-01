@@ -496,7 +496,8 @@ else
 
 	log yellow "===> start docker service"
 	sudo systemctl restart docker	
-	#sudo service docker restart		
+	#sudo service docker restart
+    sudo systemctl enable docker
 fi	
 
 docker -v
