@@ -484,6 +484,7 @@ else
 	sudo apt-get install -y docker-ce
 
 	usermod -a -G docker ${USER} # Add ubuntu user to the docker group
+    #sudo systemctl enable docker
 fi	
 
 log done "install docker"
