@@ -34,7 +34,7 @@ HYPERLEDGER_DIR="/opt/gopath/src/github.com/hyperledger"
 FABRIC_BINARY_PARENT="$HYPERLEDGER_DIR/fabric/release/$ARCH"
 FABRIC_BINARY="$HYPERLEDGER_DIR/fabric/release/$ARCH/bin"
 
-FABRIC_VERSION=v1.1.0
+FABRIC_VERSION=v1.3.0
 FABRIC_BINARY_VERSION=`echo $FABRIC_VERSION | sed 's/v//g'` 
 THIRDPARTY_IMAGE_VERSION=0.4.6
 
@@ -691,11 +691,11 @@ function runFabricExamples() {
 #----------------------------------------------------------------------
 #installCURL
 #installGoLang
-installGit
+#installGit
 
-cloneFabricCode
-cloneFabricCACode
-cloneFabricSampleCode
+#cloneFabricCode
+#cloneFabricCACode
+#cloneFabricSampleCode
 
 #installDockerCE
 #installDockerCompose
@@ -703,5 +703,5 @@ cloneFabricSampleCode
 #makeFabricBinaryTools
 downloadFabricBinaryTools
 
-pullFabricDockerImages
-runFabricExamples
+#pullFabricDockerImages
+#runFabricExamples
